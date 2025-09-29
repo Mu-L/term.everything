@@ -8,11 +8,47 @@ PODMAN_RUNROOT="./.podman-run"
 PODMAN="podman --root $PODMAN_ROOT --runroot $PODMAN_RUNROOT"
 APP_NAME="term.everything❗mmulet.com-dont_forget_to_chmod_+x_this_file"
 
+get_distro_podman_install() {
+    # Try to detect the distro
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        DISTRO=$ID
+    else
+        DISTRO="unknown"
+    fi
+    
+    case $DISTRO in
+        ubuntu|debian)
+            echo "sudo apt update && sudo apt install -y podman"
+            ;;
+        fedora)
+            echo "sudo dnf install -y podman"
+            ;;
+        centos|rhel|rocky|almalinux)
+            echo "sudo yum install -y podman"
+            ;;
+        arch|manjaro)
+            echo "sudo pacman -S podman"
+            ;;
+        opensuse*)
+            echo "sudo zypper install podman"
+            ;;
+        alpine)
+            echo "sudo apk add podman"
+            ;;
+        *)
+            echo "Please install podman using your distribution's package manager"
+            ;;
+    esac
+}
+
 if ! command -v podman >/dev/null 2>&1; then
-    echo "Warning: podman is not installed or not in PATH. On ubuntu \"sudo apt install podman\". Please install podman to proceed, it's literally all you need. Don't even need attention. Just podman. Just get podman. What are you waiting for? Stop reading this and install podman."
+    INSTALL_CMD=$(get_distro_podman_install)
+    echo "Warning: podman is not installed or not in PATH."
+    echo "To install on your system, try: $INSTALL_CMD"
+    echo "Please install podman to proceed, it's literally all you need. Don't even need attention. Just podman. Just get podman. What are you waiting for? Stop reading this and install podman."
     exit 1
 fi
-
 
 # Check if git is available and update submodules if so, unless SKIP_SUBMODULE_CHECK is set
 if [ -z "$SKIP_SUBMODULE_CHECK" ]; then
